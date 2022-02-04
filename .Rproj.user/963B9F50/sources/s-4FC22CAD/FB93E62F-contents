@@ -8,9 +8,6 @@ output:
     toc: TRUE
     toc_depth: 2
     number_sections: true
-    css: styles.css
-    includes:
-      after_body: footer.html
 site: distill::distill_website
 ---
 
@@ -293,19 +290,19 @@ f62 %>%
 
 The 19 topics were clustered using a similarity measure to calculate the distance between topics and the results are presented in a two-dimensional graph using multidimensional scaling.
 
-```{r, echo=F, warning=F, message=F, eval=F, results='hide'}
+```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
 folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_review"
 # Load results
 load(paste(folder, "/5_Topic_model_eco-innov/results_LDA_eco-innov_061221.rda", sep=""))
 ```
 
-```{r, echo=F, warning=F, message=F, eval=F}
+```{r, echo=F, warning=F, message=F, eval=T}
 stm::toLDAvis(h3,
               docs=e4$documents,
               R = 10,
               plot.opts = list(xlab = "", ylab = ""),
               lambda.step = 1,
-              out.dir = "G:/Mi unidad/Web_pages/review_paper_ecoinnov/review_paper_ecoinnov/topic_modeling_files",
+              out.dir = "G:/Mi unidad/Web_pages/review_paper_ecoinnov/topic_modeling_files",
               open.browser = F,
               as.gist = FALSE,
               reorder.topics = T

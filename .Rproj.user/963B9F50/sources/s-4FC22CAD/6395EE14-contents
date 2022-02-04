@@ -12,3 +12,4 @@ nnavbar:
 output:
   distill::distill_article:
     toc: true
+    css: styles.css
