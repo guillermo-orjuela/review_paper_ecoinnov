@@ -1,0 +1,36 @@
+name: "bibliometria_r_rev-lit"
+title: "Bibliometria en R"
+google_analytics: "239362750"
+output_dir: "_site"
+navbar:
+  left:
+    - icon: fa-home
+      text: "Inicio"
+      href: index.html
+    - icon: fa-book-open
+      text: "Contenido"
+      menu:
+      - text: "Busqueda de informacion"
+        href: busqueda_de_info.html
+      - text: "Descripcion UA"
+        href: descripcion.html
+      - text: "Visualizacion"
+        href: estructuras.html
+      - text: "Mineria de texto"
+        href: mineria.html
+    - icon: fa-archive
+      text: "Recursos"
+      menu:
+      - text: "Recursos"
+        href: recursos.html
+      - text: "Rev. Lit. Econ. y gestion"
+        href: rev_lit.html
+  right:
+    - icon: fa-user-circle
+      text: "Sobre mi"
+      href: about.html
+    - icon: fa-envelope
+      href: mailto:orjuelarguillermo@gmail.com
+    - icon: fa-google
+      href: https://scholar.google.com/citations?user=eK-vWdEAAAAJ&hl=es
+output: distill::distill_article
