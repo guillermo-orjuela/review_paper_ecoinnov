@@ -1,0 +1,842 @@
+---
+title: "Actualización de parámetros agrícolas de Honduras y propuestas metodológicas de aptitud, tensiones entre los cultivos de seguridad alimentaria y comerciales y análisis de sensibilidad según los parametros ecológicos"
+subtitle: "Segundo informe"
+author: "Guillermo Orjuela Ramirez"
+lang: "es-CO"
+output:
+  pdf_document: 
+    toc: true
+    toc_depth: 3
+    number_sections: true
+fontsize: 12pt
+geometry: "left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm"
+---
+
+# Introducción {-}
+
+El segundo informe propone un conjunto de métodos para medir los cambios en aptitud y medir las tensiones entre cultivos. Luego, aplica la propuesta metodológica, a los resultados preliminares del estudio. La **primera parte** de este informe analiza los cambios en aptitud de los cultivos de seguridad alimentaria y comerciales. La **segunda parte** analiza las tensiones presente y futura entre los dos tipos de cultivos y los cambios de esas tensiones en el tiempo. La **tercera parte** del informe presenta un análisis de sensibilidad en el que se cambian los parámetros ecológicos (tempratura y precipitación) para identificar los umbrales que re requieren para disminuir las tensiones entre cultivos de seguridad alimentaria y cultivos comerciales.
+
+Adicional a este informe, se presenta el archivo en formato rmarkdown con los códigos del procesamiento de la información.
+
+En el tercer informe, con base en la revisión de literatura, se definirán las bases conceptuales de las tensiones y las ventajas comparativas entre cultivos y se presenta la metodología del working paper (cuarto informe).
+
+```{r, echo=F, warning=F, message=F, eval=T}
+suppressMessages(library(dplyr))
+suppressMessages(library(raster))
+suppressMessages(library(ggplot2))
+suppressMessages(library(stargazer))
+suppressMessages(library(stringr))
+suppressMessages(library(ggridges))
+suppressMessages(library(Cairo))
+suppressMessages(library(ggpubr))
+suppressMessages(library(parameters))
+suppressMessages(library(kableExtra))
+
+## Directorios
+# Carpeta con suitability presente
+baselineDir <- "C:/Users/User/OneDrive - Pontificia Universidad Javeriana Cali/2021_CGIAR/Sui/output/baseline/analyses/runs"
+# Carpeta de suitability futura
+cropDir <- "C:/Users/User/OneDrive - Pontificia Universidad Javeriana Cali/2021_CGIAR/Sui/output/cc/analyses/runs-future/rcp85"
+```
+
+# Cambios en aptitud de los cultivos de seguridad alimentaria y comerciales
+
+## Cultivos de seguridad alimentaria
+
+### Preparación de la base de datos de aptitud presente y futura de los cultivos de seguridad alimentaria.
+
+La información de la aptitud presente y futura para los 4 cultivos de seguridad alimentaria (frijol, maíz, arroz y yuca.) se obtiene de los raster que se generan de las funciones de aptitud del script **4_Sui_BaseLine_FSP1**
+```{r, echo=F, warning=F, message=F, eval=T}
+# Presente
+p1 <- raster(paste(baselineDir, 
+                   "/frijol_psuitability.tif", sep = ""))
+p2 <- raster(paste(baselineDir, 
+                   "/maiz_psuitability.tif", sep = ""))
+p3 <- raster(paste(baselineDir, 
+                   "/arroz_psuitability.tif", sep = ""))
+p4 <- raster(paste(baselineDir, 
+                   "/yuca_psuitability.tif", sep = ""))
+# Futuro
+f1 <- raster(paste(cropDir, 
+                   "/frijol_psuitability.tif", sep = ""))
+f2 <- raster(paste(cropDir, 
+                   "/maiz_psuitability.tif", sep = ""))
+f3 <- raster(paste(cropDir, 
+                   "/arroz_psuitability.tif", sep = ""))
+f4 <- raster(paste(cropDir, 
+                   "/yuca_psuitability.tif", sep = ""))
+```
+
+En esta sección se cargan 8 raster y se convierten a base de datos. Cada raster contiene la información de 31.482 píxeles del corredor seco de Honduras. Luego, se combinan en dos objetos que contienen la información de la aptitud de cultivos en el presente (**dfp**) y el futuro (**dff**).
+```{r, echo=F, warning=F, message=F, eval=T}
+dp1 <- as.data.frame(rasterToPoints(p1))
+dp2 <- as.data.frame(rasterToPoints(p2))
+dp3 <- as.data.frame(rasterToPoints(p3))
+dp4 <- as.data.frame(rasterToPoints(p4))
+
+df1 <- as.data.frame(rasterToPoints(f1))
+df2 <- as.data.frame(rasterToPoints(f2))
+df3 <- as.data.frame(rasterToPoints(f3))
+df4 <- as.data.frame(rasterToPoints(f4))
+
+# Base de datos Presente
+dfp <- left_join(dp1, dp2,  by=c("x", "y"))
+dfp <- left_join(dfp, dp3,  by=c("x", "y"))
+dfp <- left_join(dfp, dp4,  by=c("x", "y"))
+
+# Base de datos futura
+dff <- left_join(df1, df2,  by=c("x", "y"))
+dff <- left_join(dff, df3,  by=c("x", "y"))
+dff <- left_join(dff, df4,  by=c("x", "y"))
+```
+
+### Descripción de la aptitud presente y futura.
+
+Se estimaron las estadísticas descriptivas (media, desviación estándar, mínimo, máximo y percentiles) de la aptitud presente y futura, para identificar el comportamiento de las variables.
+```{r, echo=F, warning=F, message=F, eval=T}
+# Descriptivos presente
+dfp1 <- dfp %>%
+  rowwise() %>%
+  mutate(sum_seg=sum(frijol_psuitability,
+                     maiz_psuitability,
+                     arroz_psuitability,
+                     yuca_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_seg=sum_seg/4)
+dfp1 <- as.data.frame(dfp1)
+# Descriptivos futura
+dff1 <- dff %>%
+  rowwise() %>%
+  mutate(sum_seg=sum(frijol_psuitability,
+                     maiz_psuitability,
+                     arroz_psuitability,
+                     yuca_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_seg=sum_seg/4)
+dff1 <- as.data.frame(dff1)
+```
+
+La aptitud de los cultivos de frijol, maíz, arroz y muestran promedios de aptitud entre los 46.9 y 100 (Cuadro 1). En términos comparativos, el arroz es el cultivo con mayor volatilidad de sus resultados promedios (mayor desviación estándar) mientras que el frijol muestra más consistencia relativa en sus valores promedio. La información de aptitud del cultivo de yuca muestra valores atípicos de 100 para todos los píxeles.
+
+```{r, echo=F, warning=F, message=F, eval=T, results='asis'}
+stargazer(dfp1[c("frijol_psuitability", "maiz_psuitability",
+                "arroz_psuitability", "yuca_psuitability",
+                "sum_seg", "avg_seg")],
+          covariate.labels=c("Frijol", "Maíz", "Arroz", "Yuca", "Suma suit.", 
+                             "Promedio suit."),
+          title = "Descriptivos de aptitud presente de cultivos de seg. alim.", type = "latex", digits=1, header=F)
+```
+
+El Cuadro 2 muestra la aptitud futura de los 4 cultivos de seguridad alimentaria. Se confirma que el cultivo de yuca no muestra cambios en los valores de aptitud de 100 para todos los píxeles. El cultivo del arroz es el único que tienen una disminución promedio de su aptitud, mientras que el maíz no muestra cambios en el promedio y el frijol incrementa ligeramente su aptitud futura.
+
+En síntesis, hay cambios positivos en el promedio de la aptitud futura respecto a la aptitud presente en el cultivo de frijol, cambios negativos en el cultivo de arroz y el promedio de aptitud se mantiene contante en el maíz.
+
+A partir de aquí, se optó por eliminar el cultivo de yuca debido a que su información puede causar ruido en las comparaciones de tensiones al favorecer más a los cultivos de seguridad alimentaria. Además, como no muestra cambios en sus valores entre el presente y futuro, no es útil para los propósitos de esta investigación.
+
+```{r, echo=F, warning=F, message=F, eval=T, results='asis'}
+stargazer(dff1[c("frijol_psuitability", "maiz_psuitability",
+                "arroz_psuitability", "yuca_psuitability",
+                "sum_seg", "avg_seg")],
+          covariate.labels=c("Frijol", "Maíz", "Arroz", "Yuca", "Suma suit.", 
+                             "Promedio suit."),
+          title = "Descriptivos de aptitud futura de cultivos de seg. alim.", type = "latex", digits=1, header=F)
+```
+
+### Distribución de la aptitud presente y futura
+
+La Figura 1 muestra la densidad de las aptitudes presente y futura para los tres cultivos de seguridad alimentaria. Los cultivos de arroz y frijol presentan una distribución similar, cuyos valores de aptitud están entre 80 y 100. El cultivo de maíz muestra una distribución más homogénea en los valores de aptitud.
+
+```{r, echo=F, warning=F, message=F, eval=T, fig.width=12, fig.height=8}
+# Descriptivos presente
+dfp1 <- dfp %>%
+  dplyr::select(-c("yuca_psuitability")) %>%
+  rowwise() %>%
+  mutate(sum_seg=sum(frijol_psuitability,
+                     maiz_psuitability,
+                     arroz_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_seg=sum_seg/3)
+dfp1 <- as.data.frame(dfp1)
+# Descriptivos futura
+dff1 <- dff %>%
+  dplyr::select(-c("yuca_psuitability")) %>%
+  rowwise() %>%
+  mutate(sum_seg=sum(frijol_psuitability,
+                     maiz_psuitability,
+                     arroz_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_seg=sum_seg/3)
+dff1 <- as.data.frame(dff1)
+
+dfp2 <- dfp1 %>% 
+  tidyr::gather(var,val, 3:5) %>%
+  rename(val_p=val)
+
+dff2 <- dff1 %>% 
+  tidyr::gather(var,val, 3:5) %>%
+  rename(val_f=val)
+
+dts <- left_join(dfp2, dff2, by=c("x", "y", "var"))
+
+g1 <- dts %>% 
+  ggplot(aes(val_p, var, color = var,  fill = var)) +
+  geom_density_ridges(alpha=0.4) + 
+  guides(shape="none") + theme_minimal() + 
+  labs(y="Cultivos", x="Densidad",
+        title = "Aptitud presente (2010)") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40", face = "bold"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_y_discrete(labels=c("Maíz",
+                            "Fríjol",
+                            "Arroz"),
+                    limits = c("maiz_psuitability",
+                               "frijol_psuitability",
+                               "arroz_psuitability"))
+
+g2 <- dts %>% 
+  ggplot(aes(val_f, var, color = var,  fill = var)) +
+  geom_density_ridges(alpha=0.4) + 
+  guides(shape="none") + theme_minimal() + 
+  labs(y=NULL, x="Densidad",
+        title = "Aptitud futura (2050)") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40", face = "bold"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_y_discrete(labels=c("Maíz",
+                            "Fríjol",
+                            "Arroz"),
+                    limits = c("maiz_psuitability",
+                               "frijol_psuitability",
+                               "arroz_psuitability"))
+
+gg1 <- ggarrange(g1,g2,
+                 ncol = 2, nrow = 1, legend=NULL)
+
+annotate_figure(gg1, top = text_grob("Figura 1. Aptitud presente y futura de cultivos de seguridad alimentaria", color = "grey40", size = 18, hjust = 0.7))
+```
+
+La Figura 2 muestra la variación de la aptitud futura respecto a la aptitud presente para los cultivos de seguridad alimentaria y la distribución de píxeles según nivel de aptitud. El eje X representa los valores de aptitud presente y el eje Y los valores de aptitud futura. Valores por encima de la diagonal significan que hay píxeles donde la aptitud futura de un cultivo es mayor que la presente, lo que significa que hay mejoras en la aptitud. Posiciones de los píxeles por debajo de la diagonal representan desmejoran en la aptitud. Adicionalmente, la concentración o dispersión de los píxeles muestra qué tan homogéneos o heterogéneos son las aptitudes de los cultivos en el corredor seco de Honduras.
+
+En el caso del frijol, que es el cultivo con el mayor aumento promedio de la aptitud futura respecto al promedio de los valores presentes, se observan cambios en el 47.6 % de los píxeles hacia una mejora de la aptitud. El 38 % de los píxeles no reportaron variación en la aptitud, y en menor medida, el 14.4 % de los píxeles reflejaron una desmejora en su aptitud futura respecto a la presente.
+
+De acuerdo a la Figura 2, el maíz presenta una mayor dispersión en los píxeles, con diferentes combinaciones de aptitud presente y futura. El maíz es uno de los tres cultivos que mayores cambios negativos tendrá en aptitud. El 35 % de los píxeles muestran una desmejora en la aptitud, mientras que solo el 2.23 % de los píxeles muestran.
+
+El arroz es el cultivo con el mayor número de píxeles que no reportaron variación entre la aptitud presente y futura (62.8 %). Sin embargo, solo el 2.23 % de los píxeles presentan mejoras en la aptitud. Más de la tercera parte de los píxeles (35 %) muestran una desmejora.
+
+Además, la información de la Figura 2 es consistente con los valores estándar reportados en los Cuadros 1 y 2. El cultivo del arroz, el cual mostró la mayor desviación estándar, es el cultivo con la mayor heterogeneidad de valores de aptitud. Por otro lado, el cultivo de frijol tiene una mayor concentración relativa hacia valores superiores de aptitud y es el que reportó una menor desviación estándar. Finalmente, el cultivo de maíz muestra una desviación estándar intermedia entre los tres cultivos y particularmente es el cultivo que muestra mayores cambios de aptitud entre píxeles, es decir, tanto mejoras como desmejoras.
+
+```{r, echo=F, warning=F, message=F, eval=T, fig.width=12, fig.height=8}
+dts %>%
+  ggplot(aes(val_p, val_f, color = var)) +
+  geom_point(size = 1, alpha = 0.3) +
+  geom_abline(intercept = 0, color = "grey20") +
+  facet_wrap(~var) +
+  guides(shape="none") + theme_minimal() +
+  labs(y="Aptitud futura (2050)", x="Aptitud presente (2010)",
+        title = "Figura 2. Relación de aptitud presente y futura para cultivos de seguridad alimentaria") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 25))
+```
+
+```{r, echo=F, warning=F, message=F, eval=T}
+# Cambios en suiatability
+# Reemplazar nombres de variables
+names(dfp1) <- str_replace(names(dfp1), "(.*)_(.*)", "\\1_\\2_\\p")
+names(dff1) <- str_replace(names(dff1), "(.*)_(.*)", "\\1_\\2_\\f")
+
+dts1 <- left_join(dfp1, dff1, by=c("x", "y"))
+
+dts1 <- dts1 %>%
+  mutate(t_frijol = frijol_psuitability_f - frijol_psuitability_p) %>%
+  mutate(t_maiz = maiz_psuitability_f - maiz_psuitability_p) %>%
+  mutate(t_arroz = arroz_psuitability_f - arroz_psuitability_p) %>%
+  mutate(tension_frijol = case_when(t_frijol < 0 ~ "desmejora_ap",
+                                    t_frijol > 0 ~ "mejora_ap",
+                                    t_frijol == 0 ~ "no_variacion")) %>%
+  mutate(tension_maiz = case_when(t_maiz < 0 ~ "desmejora_ap",
+                                  t_maiz > 0 ~ "mejora_ap",
+                                  t_maiz == 0 ~ "no_variacion")) %>%
+  mutate(tension_arroz = case_when(t_arroz < 0 ~ "desmejora_ap",
+                                   t_arroz > 0 ~ "mejora_ap",
+                                   t_arroz == 0 ~ "no_variacion"))
+```
+```{r, echo=F, warning=F, message=F, eval=F}
+
+dts1 %>%
+  group_by(tension_frijol) %>%
+  count(tension_frijol) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dts1 %>%
+  group_by(tension_maiz) %>%
+  count(tension_maiz) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dts1 %>%
+  group_by(tension_arroz) %>%
+  count(tension_arroz) %>%
+  mutate(pct_avg = (n/31482)*100)
+```
+
+### Diferencias entre los valores promedio de aptitud presente y futura
+
+El test de medias entre la aptitud de cultivos de seguridad alimentaria del presente y del futuro muestra diferencias estadísticamente significativas. De acuerdo con los parámetros ecológicos del estudio, el valor promedio de la aptitud presente de los cultivos de seguridad alimentaria es estadísticamente diferente al valor promedio de la aptitud futura.
+
+Esto indica que el cambio en los parámetros ecológicos (temperatura y precipitación) del 2010 al 2050 son un factor que explica las diferencias en aptitud presente y futura de los cultivos de seguridad alimentaria.
+
+```{r, echo=F, warning=F, message=F, eval=T}
+dta <- dts1 %>% 
+  dplyr::select(x, y, avg_seg_p, avg_seg_f) %>% 
+  tidyr::gather(var, val, 3:4)
+# summary(aov(val~var, data=dta))
+t.test(val~var, data=dta)
+```
+
+## Cultivos comerciales
+
+### Preparación de la base de datos de aptitud presente y futura de los cultivos comerciales.
+
+Similar al paso de preparación de los datos de cultivos de seguridad alimentaria, se cargan los raster con la aptitud presente y futura para los cultivos comerciales y los archivos se convierten a formato de base de datos para analizar la información de la estadística descriptiva y los cambios en aptitud. La información de la aptitud se obtuvo del script **5_Sui_Future_FSP1** y se consideraron siete cultivos para el análisis (café arábica, café robusta, caña, plátano, banano, cacao, y trigo).
+
+```{r, echo=F, warning=F, message=F, eval=T}
+# Presente
+p5 <- raster(paste(baselineDir, 
+                   "/cafe_arabica_psuitability.tif", sep = ""))
+p6 <- raster(paste(baselineDir, 
+                   "/cafe_robusta_psuitability.tif", sep = ""))
+p7 <- raster(paste(baselineDir, 
+                   "/cana_psuitability.tif", sep = ""))
+p8 <- raster(paste(baselineDir, 
+                   "/platano_psuitability.tif", sep = ""))
+p9 <- raster(paste(baselineDir, 
+                   "/banana_psuitability.tif", sep = ""))
+p10 <- raster(paste(baselineDir, 
+                   "/cocoa_psuitability.tif", sep = ""))
+p11 <- raster(paste(baselineDir, 
+                   "/wheat_psuitability.tif", sep = ""))
+
+# Futuro
+f5 <- raster(paste(cropDir, 
+                   "/cafe_arabica_psuitability.tif", sep = ""))
+f6 <- raster(paste(cropDir, 
+                   "/cafe_robusta_psuitability.tif", sep = ""))
+f7 <- raster(paste(cropDir, 
+                   "/cana_psuitability.tif", sep = ""))
+f8 <- raster(paste(cropDir, 
+                   "/platano_psuitability.tif", sep = ""))
+f9 <- raster(paste(cropDir, 
+                   "/banana_psuitability.tif", sep = ""))
+f10 <- raster(paste(cropDir, 
+                   "/cocoa_psuitability.tif", sep = ""))
+f11 <- raster(paste(cropDir, 
+                   "/wheat_psuitability.tif", sep = ""))
+
+# Base de datos
+dp5 <- as.data.frame(rasterToPoints(p5))
+dp6 <- as.data.frame(rasterToPoints(p6))
+dp7 <- as.data.frame(rasterToPoints(p7))
+dp8 <- as.data.frame(rasterToPoints(p8))
+dp9 <- as.data.frame(rasterToPoints(p9))
+dp10 <- as.data.frame(rasterToPoints(p10))
+dp11 <- as.data.frame(rasterToPoints(p11))
+
+df5 <- as.data.frame(rasterToPoints(f5))
+df6 <- as.data.frame(rasterToPoints(f6))
+df7 <- as.data.frame(rasterToPoints(f7))
+df8 <- as.data.frame(rasterToPoints(f8))
+df9 <- as.data.frame(rasterToPoints(f9))
+df10 <- as.data.frame(rasterToPoints(f10))
+df11 <- as.data.frame(rasterToPoints(f11))
+
+# Base de datos Presente
+dcp <- left_join(dp5, dp6,  by=c("x", "y"))
+dcp <- left_join(dcp, dp7,  by=c("x", "y"))
+dcp <- left_join(dcp, dp8,  by=c("x", "y"))
+dcp <- left_join(dcp, dp9,  by=c("x", "y"))
+dcp <- left_join(dcp, dp10,  by=c("x", "y"))
+dcp <- left_join(dcp, dp11,  by=c("x", "y"))
+
+# Base de datos futura
+dcf <- left_join(df5, df6,  by=c("x", "y"))
+dcf <- left_join(dcf, df7,  by=c("x", "y"))
+dcf <- left_join(dcf, df8,  by=c("x", "y"))
+dcf <- left_join(dcf, df9,  by=c("x", "y"))
+dcf <- left_join(dcf, df10,  by=c("x", "y"))
+dcf <- left_join(dcf, df11,  by=c("x", "y"))
+```
+
+### Descripción de la aptitud presente y futura.
+
+La información de las estadísticas descriptivas (media, desviación estándar, mínimo, máximo y percentiles) de la aptitud presente y futura permite identificar el comportamiento de las variables, para determinar qué cultivos son apropiados para el análisis.
+```{r, echo=F, warning=F, message=F, eval=T}
+# Descriptivos presente
+dcp1 <- dcp %>%
+  rowwise() %>%
+  mutate(sum_cash=sum(cafe_arabica_psuitability,
+                     cafe_robusta_psuitability,
+                     cana_psuitability,
+                     platano_psuitability,
+                     banana_psuitability,
+                     cocoa_psuitability,
+                     wheat_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_cash=sum_cash/7)
+dcp1 <- as.data.frame(dcp1)
+# Descriptivos futura
+dcf1 <- dcf %>%
+  rowwise() %>%
+  mutate(sum_cash=sum(cafe_arabica_psuitability,
+                     cafe_robusta_psuitability,
+                     cana_psuitability,
+                     platano_psuitability,
+                     banana_psuitability,
+                     cocoa_psuitability,
+                     wheat_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_cash=sum_cash/7)
+dcf1 <- as.data.frame(dcf1)
+```
+
+```{r, echo=F, warning=F, message=F, eval=T, results='asis'}
+stargazer(dcp1[c("cafe_arabica_psuitability",
+                 "cafe_robusta_psuitability",
+                 "cana_psuitability",
+                 "platano_psuitability",
+                 "banana_psuitability",
+                 "cocoa_psuitability",
+                 "wheat_psuitability",
+                 "sum_cash", "avg_cash")],
+          covariate.labels=c("Café arabica", "Café robusta", 
+                             "Caña", "Plátano", "Banano", "Cacao",
+                             "Trigo", "Suma suit.", "Promedio suit."),
+          title = "Descriptivos de aptitud presente de cultivos comerciales", type = "latex", digits=1, header=F)
+```
+
+De acuerdo con el Cuadro 3, los siete cultivos comerciales muestra una aptitud presente promedio entre 0 y 98. La gran dispersión indica que hay cultivos con una baja aptitud promedio como el banano (0.2) y el trigo (22.4) que tienen un comportamiento atípico al de los otros cultivos comerciales. Principalmente el cultivo de babano tiene valores máximos de aptotud de 16. Además, es posible que hayan problemas en la información relacionada con el banano. Los cultivos de trigo y café robusta tienen la mayor dispersión respecto a sus medias (31.5 y 31.7, respectivamente). El plátano y la caña son cultivos con menor dispersión respecto a sus medias, principalmente la caña que muestra mayor homogeneidad en sus valores de aptitud presente.
+
+Los resultados del Cuadro 4 indican que la aptitud promedio futura es ligeramente mayor para los cultivos de caña y trigo. En cambio, en promedio, la aptitud futura decrece para los cultivos de café arábica y robusta, plátano y cacao. Esto refleja que el cambio en los parámetros de temperatura y precipitación a 2050 afectan negativamente 4 de los cultivos comerciales.
+
+Para el análisis de aptitud presente y futura se eliminó el cultivo de banano y trigo debido a sus valores atípicos respecto al conjunto de cultivos.
+
+```{r, echo=F, warning=F, message=F, eval=T, results='asis'}
+stargazer(dcf1[c("cafe_arabica_psuitability",
+                 "cafe_robusta_psuitability",
+                 "cana_psuitability",
+                 "platano_psuitability",
+                 "banana_psuitability",
+                 "cocoa_psuitability",
+                 "wheat_psuitability",
+                 "sum_cash", "avg_cash")],
+          covariate.labels=c("Café arabica", "Café robusta", 
+                             "Caña", "Plátano", "Banano", "Cacao",
+                             "Trigo", "Suma suit.", "Promedio suit."),
+          title = "Descriptivos de aptitud futura de cultivos comerciales", type = "latex", digits=1, header=F)
+```
+
+### Distribución de la aptitud presente y futura
+
+La Figura 3 muestra la densidad de las aptitudes presente y futura para los cinco cultivos comerciales del estudio. La caña y el café robusta tienen una menor concentración relativa en los valores superiores de aptitud. En comparación con los otros cultivos comerciales, la caña y el café robusta muestran una mayor proporción de píxeles con valores de aptitud entre los 40 y 60.
+
+```{r, echo=F, warning=F, message=F, eval=T, fig.width=12, fig.height=8}
+# Descriptivos presente
+dcp1 <- dcp %>%
+  dplyr::select(-c("banana_psuitability", "wheat_psuitability")) %>%
+  rowwise() %>%
+  mutate(sum_cash=sum(cafe_arabica_psuitability,
+                     cafe_robusta_psuitability,
+                     cana_psuitability,
+                     platano_psuitability,
+                     cocoa_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_cash=sum_cash/5)
+dcp1 <- as.data.frame(dcp1)
+# Descriptivos futura
+dcf1 <- dcf %>%
+  dplyr::select(-c("banana_psuitability", "wheat_psuitability")) %>%
+  rowwise() %>%
+  mutate(sum_cash=sum(cafe_arabica_psuitability,
+                     cafe_robusta_psuitability,
+                     cana_psuitability,
+                     platano_psuitability,
+                     cocoa_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_cash=sum_cash/5)
+dcf1 <- as.data.frame(dcf1)
+
+dcp2 <- dcp1 %>% 
+  tidyr::gather(var,val, 3:7) %>%
+  rename(val_p=val)
+
+dcf2 <- dcf1 %>% 
+  tidyr::gather(var,val, 3:7) %>%
+  rename(val_f=val)
+
+dtc <- left_join(dcp2, dcf2, by=c("x", "y", "var"))
+
+g3 <- dtc %>% 
+  ggplot(aes(val_p, var, color = var,  fill = var)) +
+  geom_density_ridges(alpha=0.4) + 
+  guides(shape="none") + theme_minimal() + 
+  labs(y="Cultivos", x="Densidad",
+        title = "Aptitud presente (2010)") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40", face = "bold"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_y_discrete(labels=c("Café arábica",
+                            "Café robusta",
+                            "Caña",
+                            "Plátano",
+                            "Cacao"),
+                    limits = c("cafe_arabica_psuitability",
+                               "cafe_robusta_psuitability",
+                               "cana_psuitability",
+                               "platano_psuitability",
+                               "cocoa_psuitability"))
+
+g4 <- dtc %>% 
+  ggplot(aes(val_p, var, color = var,  fill = var)) +
+  geom_density_ridges(alpha=0.4) + 
+  guides(shape="none") + theme_minimal() + 
+  labs(y=NULL, x="Densidad",
+        title = "Aptitud futura (2050)") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40", face = "bold"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) + 
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  scale_y_discrete(labels=c("Café arábica",
+                            "Café robusta",
+                            "Caña",
+                            "Plátano",
+                            "Cacao"),
+                    limits = c("cafe_arabica_psuitability",
+                               "cafe_robusta_psuitability",
+                               "cana_psuitability",
+                               "platano_psuitability",
+                               "cocoa_psuitability"))
+gg2 <- ggarrange(g3,g4,
+                 ncol = 2, nrow = 1, legend=NULL)
+
+annotate_figure(gg2, top = text_grob("Figura 3. Aptitud presente y futura de cultivos dcomerciales", color = "grey40", size = 18, hjust = 0.7))
+```
+
+La Figura 4 es homogénea a la Figura 2 e indica la variación de la aptitud futura respecto a la aptitud presente para los cinco cultivos comerciales y la distribución de píxeles según nivel de aptitudes. En el eje X están los valores de la aptitud presente y en el eje Y los valores de aptitud futura. Los píxeles por encima de la diagonal muestran mejoras en la aptitud, es decir, lugares donde la aptitud futura es mayor a la aptitud presente. Adicionalmente, la concentración o dispersión de los píxeles muestra qué tan homogéneos o heterogéneos son las aptitudes de los cultivos en el corredor seco de Honduras.
+
+Solo el cultivo de la caña muestra mejoras en la mayoría de los píxeles (66.8 %) y el 33.2 % de los píxeles no reportan variación futura en aptitud respecto a 2010. Los cultivos que muestran desmejoras en la aptitud futura son el café arábica (30.7 %), café robusta (62.5 %) y el cacao (16.6 %). El cultivo del plátano tiene una alta concentración en valores altos de aptitud y no reporta variaciones en el 89.8 % de los píxeles.
+
+```{r, echo=F, warning=F, message=F, eval=T, fig.width=12, fig.height=8}
+dtc %>%
+  ggplot(aes(val_p, val_f, color = var)) +
+  geom_point(size = 1, alpha = 0.3) +
+  geom_abline(slope=1, intercept=0, color = "grey20") +
+  facet_wrap(~var) +
+  guides(shape="none") + theme_minimal() +
+  labs(y="Aptitud futura (2050)", x="Aptitud presente (2010)",
+        title = "Figura 4. Relación de aptitud presente y futura para cultivos comerciales") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 16, color = "grey40"),
+        axis.title = element_text(size = 16, color = "grey40"),
+        plot.title = element_text(size = 16, color = "grey40"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=17),
+        legend.title = element_text(color="grey40", size=17)) +
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 25))
+```
+
+```{r, echo=F, warning=F, message=F, eval=T}
+# Cambios en suiatability
+# Reemplazar nombres de variables
+names(dcp1) <- str_replace(names(dcp1), "(.*)_(.*)", "\\1_\\2_\\p")
+names(dcf1) <- str_replace(names(dcf1), "(.*)_(.*)", "\\1_\\2_\\f")
+
+dtc1 <- left_join(dcp1, dcf1, by=c("x", "y"))
+
+dtc1 <- dtc1 %>%
+  mutate(t_cafe_arabica = cafe_arabica_psuitability_f - cafe_arabica_psuitability_p) %>%
+  mutate(t_cafe_robusta = cafe_robusta_psuitability_f - cafe_robusta_psuitability_p) %>%
+  mutate(t_cana = cana_psuitability_f - cana_psuitability_p) %>%
+  mutate(t_platano = platano_psuitability_f - platano_psuitability_p) %>%
+  mutate(t_cocoa = cocoa_psuitability_f - cocoa_psuitability_p) %>%
+  mutate(tension_cafe_arabica = case_when(t_cafe_arabica < 0 ~ "desmejora_ap",
+                                    t_cafe_arabica > 0 ~ "mejora_ap",
+                                    t_cafe_arabica == 0 ~ "no_variacion")) %>%
+  mutate(tension_cafe_robusta = case_when(t_cafe_robusta < 0 ~ "desmejora_ap",
+                                  t_cafe_robusta > 0 ~ "mejora_ap",
+                                  t_cafe_robusta == 0 ~ "no_variacion")) %>%
+  mutate(tension_cana = case_when(t_cana < 0 ~ "desmejora_ap",
+                                   t_cana > 0 ~ "mejora_ap",
+                                   t_cana == 0 ~ "no_variacion")) %>% 
+  mutate(tension_platano = case_when(t_platano < 0 ~ "desmejora_ap",
+                                   t_platano > 0 ~ "mejora_ap",
+                                   t_platano == 0 ~ "no_variacion")) %>% 
+  mutate(tension_cocoa = case_when(t_cocoa < 0 ~ "desmejora_ap",
+                                   t_cocoa > 0 ~ "mejora_ap",
+                                   t_cocoa == 0 ~ "no_variacion"))
+```
+```{r, echo=F, warning=F, message=F, eval=F}
+
+dtc1 %>%
+  group_by(tension_cafe_arabica) %>%
+  count(tension_cafe_arabica) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dtc1 %>%
+  group_by(tension_cafe_robusta) %>%
+  count(tension_cafe_robusta) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dtc1 %>%
+  group_by(tension_cana) %>%
+  count(tension_cana) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dtc1 %>%
+  group_by(tension_platano) %>%
+  count(tension_platano) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+dtc1 %>%
+  group_by(tension_cocoa) %>%
+  count(tension_cocoa) %>%
+  mutate(pct_avg = (n/31482)*100)
+
+```
+
+### Diferencias entre los valores promedio de aptitud presente y futura
+
+El test de medias entre la aptitud de cultivos comerciales del presente y del futuro muestra diferencias estadísticamente significativas al 95 % de confianza. De acuerdo con los parámetros ecológicos del estudio, el valor promedio de la aptitud presente de los cultivos comerciales es estadísticamente diferente al valor promedio de la aptitud futura.
+
+Esto indica que el cambio en los parámetros ecológicos (temperatura y precipitación) del 2010 al 2050 son un factor que explica las diferencias en aptitud presente y futura de los cultivos comerciales. Comparado con el resultado del test de medias de los cultivos de seguridad alimentaria, la diferencia es más marcada en los cultivos de seguridad alimentaria que en los comerciales.
+
+Es decir, para el contexto del corredor seco de Honduras, los parámetros ecológicos son un factor que explican el cambio en aptitud de los cultivos.
+
+```{r, echo=F, warning=F, message=F, eval=T}
+dtb <- dtc1 %>% 
+  dplyr::select(x, y, avg_cash_p, avg_cash_f) %>% 
+  tidyr::gather(var, val, 3:4)
+
+t.test(val~var, data=dtb)
+```
+
+# Tensiones y cambios en las tensiones del presente (2010) y futuro (2050) por competencia entre cultivos
+
+## Tensiones en el presente y futuro
+
+La competencia entre cultivos entendida como el conjunto de atributos que influyen en las decisiones de qué cultivar, depende de variables como el valor económico que un cultivo reporta a un agricultor o la aptitud de los cultivos, entre otros. Debido a que los cultivos tienen diferentes atributos, existe una competencia entre ellos que crea tensiones sobre cuál es el cultivo (o cultivos) más aptos en un territorio. Por lo tanto, la competencia entre cultivos es un fenómeno que genera tensiones y nosotros argumentamos que la tensión influye sobre las decisiones del conjunto de cultivos ambientalmente más aptos para cultivar.
+
+Debido a que la competencia entre cultivos crea tensiones en un territorio, las tensiones ambientales de los cultivos son las presiones que los cultivos con una mayor aptitud ejercen sobre un cultivo prevalente en un lugar determinado y que influyen en una posible pérdida de ventaja comparativa. Por lo tanto, las tensiones conllevan cambios en la ventaja comparativa de los cultivos.
+
+Nosotros argumentamos que las condiciones ambientales de un territorio influyen en las tensiones entre cultivos lo cual produce cambios en la ventaja comparativa de los cultivos. Así, para calcular las tensiones entre cultivos de seguridad alimentaria y cultivos comerciales $Tension$, se estimó para cada píxel *i* la diferencia entre el valor promedio de aptitud de cultivos de seguridad alimentaria ($\frac{Suiseg_i}{n}$) y el valor promedio de aptitud de cultivos comerciales $(\frac{Suicom_i}{n})$. Por lo tanto:
+$$
+Tension_i = \frac{Suiseg_i}{n} - \frac{Suicom_i}{n}
+$$
+De acuerdo con la propuesta de cálculo de las tensiones, una $Tension>0$ significa que la aptitud promedio de los cultivos de seguridad alimentaria es mayor que la aptitud promedio de los cultivos comerciales. Esto indica que los parámetros ambientales de un territorio favorecen, en promedio, más a los cultivos de seguridad alimentaria que a los cultivos comerciales. Por lo tanto, en un entorno de competencia entre cultivos habría incentivos ambientales hacia los cultivos de seguridad alimentaria más que a los cultivos comerciales, lo que llevaría a mejoras en la ventaja comparativa de los cultivos de seguridad alimentaria debido a las condiciones ambientales.
+
+En el caso contrario, una $Tension<0$ muestra que la aptitud promedio de los cultivos comerciales es mayor que la aptitud promedio de los cultivos de seguridad alimentaria, lo cual favorecería la ventaja comparativa de los cultivos comerciales. Dicho desde el interés de nuestro estudio, habría una pérdida de ventaja comparativa de los cultivos de seguridad alimentaria debido a los parámetros ambientales.
+
+En el presente, hay una pérdida de ventajas competitivas del grupo de cultivos de seguridad alimentaria en el 98.14 % de los píxeles del corredor seco de Honduras. Solo el 1.77 % de los píxeles reportan un aumento en sus ventajas competitivas.
+
+```{r, echo=F, warning=F, message=F, eval=T}
+# tension presente
+dts2 <- dts1 %>% dplyr::select(x, y, avg_seg_p, avg_seg_f)
+dtc2 <- dtc1 %>% dplyr::select(x, y, avg_cash_p, avg_cash_f)
+
+dt <- left_join(dts2, dtc2, by=c("x", "y"))
+
+dt <- dt %>%
+  mutate(tension_p = avg_seg_p - avg_cash_p) %>%
+  mutate(vent_comp_p = case_when(tension_p < 0 ~ "desfavorece_segalim",
+                               tension_p > 0 ~ "favorece_segalim",
+                               tension_p == 0 ~ "no_variacion"))
+
+# Tension futura
+
+dt <- dt %>%
+  mutate(tension_f = avg_seg_f - avg_cash_f) %>%
+  mutate(vent_comp_f = case_when(tension_f < 0 ~ "desfavorece_segalim",
+                               tension_f > 0 ~ "favorece_segalim",
+                               tension_f == 0 ~ "no_variacion"))
+
+dtr1 <- dt %>% 
+  group_by(vent_comp_p) %>%
+  count(vent_comp_p) %>%
+  mutate(pct_avg_p = (n/31482)*100)  %>% 
+  rename(n_p=n)
+
+dtr2 <- dt %>%
+  group_by(vent_comp_f) %>%
+  count(vent_comp_f) %>%
+  mutate(pct_avg_f = (n/31482)*100) %>% 
+  rename(n_f=n)
+
+dtr3 <- cbind(dtr1, dtr2)
+
+kable(dtr3, caption = "Píxeles con tensiones presentes y futuras", 
+      booktabs = T, digits = 2, col.names = c("Tension", 
+                                              "Num. píxeles",
+                                              "% píxeles",
+                                              "Tension", 
+                                              "Num. píxeles",
+                                              "% píxeles")) %>% 
+  kable_styling(latex_options = c("repeat_header", 
+                                  "center", "hold_position", "condensed"),
+                full_width=F, position="center") %>% 
+  add_header_above(c("Presente" = 3, "Futuro" = 3))
+```
+
+## Cambios en las tensiones en el tiempo
+
+Los cambios en las tensiones del presente y del futuro reflejan cambios en las ventajas comparativas en el tiempo. Para identificar los cambios en las ventajas comparativas se presenta la Figura 5, la cual muestra cuadrantes con los posibles cambios en la tensiones del presente al futuro. Cada cuadrante es un posible escenario que puede ocurrir en un territorio. A partir de estos cuadrantes se pueden definir acciones de política.
+
+**Cuadrante superior-derecho:** este cuadrante reporta píxeles con ventajas comparativas en seguridad alimentaria en el presente y que se mantienen o mejoran en el futuro. Son píxeles donde la tensión presente y futura son > 0.
+
+**Cuadrante inferior-derecho:** este cuadrante muestra píxeles que en el presente hubo ventajas comparativas en seguridad alimentaria pero en el futuro se disminuyen. Son píxeles donde la tensión presente es < 0 y la tensión futura es < 0.
+
+**Cuadrante superior-izquiero:** este cuadrante indica píxeles que en el presente tuvieron una pérdida de ventaja comparativa pero en el futuro hay una mejora. Son píxeles donde la tensión presente es < 0 y la tensión futura es > 0.
+
+**Cuadrante inferior-izquiero:** este cuadrante reporta la mayoría de píxeles, los cuales tanto en el presente como en el futuro tuvieron una pérdida de ventaja comparativa. Son píxeles donde la tensión presente y futura es < 0.
+
+```{r, echo=F, warning=F, message=F, eval=T}
+dt %>%
+  ggplot(aes(tension_p, tension_f)) +
+  geom_point(size = 1, alpha = 0.1) +
+  geom_hline(yintercept=0, linetype="dashed", color="red") + 
+  geom_vline(xintercept=0, linetype="dashed", color="red") +
+  guides(shape="none") + theme_minimal() +
+  labs(y="Tensiones futuro (2050)", x="Tensiones presente (2010)",
+        title = "Figura 5. Relaciones entre tensiones presentes y futuras") +
+  theme(panel.border = element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text = element_text(size = 12, color = "grey40"),
+        axis.title = element_text(size = 12, color = "grey40"),
+        plot.title = element_text(size = 12, color = "grey40"),
+        legend.position = "none",
+        legend.text = element_text(color="grey40", size=12),
+        legend.title = element_text(color="grey40", size=12)) +
+  scale_x_continuous(limits = c(-40, 6), breaks = seq(-40, by = 5)) + 
+  scale_y_continuous(limits = c(-40, 6), breaks = seq(-40, by = 5))
+```
+
+# Cambio tecnológico
+
+Cuando se cambian los parámetros de los cultivos de seguridad alimentaria a umbrales de tolerancia de temperaturas de $\pm 2$ grados centígrados y a cambios de $\pm 25$% de precipitación, la aptitud promedio futura de los cultivos de seguridad alimentaria es mayor que la aptitud promedio futura de los cultivos comerciales.
+
+```{r, echo=F, warning=F, message=F, eval=T}
+## Directorios de aptitud con cambio tecnológico
+# suitability presente
+# tect_baseline_Dir <- "C:/Users/User/OneDrive - Pontificia Universidad Javeriana Cali/2021_CGIAR/Sui/output/sensitivity_analysis_base/analyses/runs"
+# Carpeta de suitability futura
+tect_future_Dir <- "C:/Users/User/OneDrive - Pontificia Universidad Javeriana Cali/2021_CGIAR/Sui/output/sensitivity_analysis_future/analyses/runs-future/rcp85"
+# Aptutud presente con cambio tecnológico
+pk1 <- raster(paste(tect_future_Dir, 
+                   "/frijol_psuitability.tif", sep = ""))
+pk2 <- raster(paste(tect_future_Dir, 
+                   "/maiz_psuitability.tif", sep = ""))
+pk3 <- raster(paste(tect_future_Dir, 
+                   "/arroz_psuitability.tif", sep = ""))
+pk4 <- raster(paste(tect_future_Dir, 
+                   "/yuca_psuitability.tif", sep = ""))
+
+# Convertir a base de datos
+dkf1 <- as.data.frame(rasterToPoints(pk1))
+dkf2 <- as.data.frame(rasterToPoints(pk2))
+dkf3 <- as.data.frame(rasterToPoints(pk3))
+dkf4 <- as.data.frame(rasterToPoints(pk4))
+
+# Base de datos Presente
+dkf <- left_join(dkf1, dkf2,  by=c("x", "y"))
+dkf <- left_join(dkf, dkf3,  by=c("x", "y"))
+dkf <- left_join(dkf, dkf4,  by=c("x", "y"))
+```
+
+```{r, echo=F, warning=F, message=F, eval=T}
+# Descriptivos presente
+dkf1 <- dkf %>%
+  rowwise() %>%
+  mutate(sum_seg_k=sum(frijol_psuitability,
+                     maiz_psuitability,
+                     arroz_psuitability,
+                     na.rm=T)) %>%
+  mutate(avg_seg_k=sum_seg_k/3)
+dkf1 <- as.data.frame(dkf1)
+```
+
+```{r, echo=F, warning=F, message=F, eval=T, results='asis'}
+stargazer(dkf1[c("frijol_psuitability", "maiz_psuitability",
+                "arroz_psuitability",
+                "sum_seg_k", "avg_seg_k")],
+          covariate.labels=c("Frijol", "Maíz", "Arroz", "Suma suit.", 
+                             "Promedio suit."),
+          title = "Descriptivos de aptitud presente de cultivos de seg. alim.", type = "latex", digits=1, header=F)
+```
+
+```{r, echo=F, warning=F, message=F, eval=T}
+dkf2 <- dkf1 %>% dplyr::select(x, y, avg_seg_k)
+dtk <- left_join(dkf2, dtc2, by=c("x", "y"))
+
+# Tension futura
+
+dtk <- dtk %>%
+  mutate(tension_k = avg_seg_k - avg_cash_f) %>%
+  mutate(vent_comp_k = case_when(tension_k < 0 ~ "desfavorece_segalim",
+                               tension_k > 0 ~ "favorece_segalim",
+                               tension_k == 0 ~ "no_variacion"))
+
+dtk1 <- dtk %>% 
+  group_by(vent_comp_k) %>%
+  count(vent_comp_k) %>%
+  mutate(pct_avg_k = (n/31482)*100)  %>% 
+  rename(n_p=n)
+```

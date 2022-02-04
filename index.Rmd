@@ -1,7 +1,7 @@
 ---
-title: "Review Paper Eco-innovation: version 25-01-2022"
-description: |
-  Welcome to the website. I hope you enjoy it!
+title: "Review Paper Eco-innovation: version 04-02-2022"
+executivesummary: |
+   This is the website of the supplementary material of the review paper.
 output:
   html_document:
     theme: flatly
@@ -25,7 +25,7 @@ folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_
 load(paste(folder, "/3_Co-citation_fa-analysis/Results_FA_eco-innov_201221.rda", sep=""))
 ```
 
-1
+
 
 # Co-citation and Factor Analysis
 

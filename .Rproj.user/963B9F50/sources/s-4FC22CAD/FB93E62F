@@ -3,7 +3,7 @@
     "path": "G:/Mi unidad/Web_pages/review_paper_ecoinnov/index.Rmd",
     "project_path": "index.Rmd",
     "type": "r_markdown",
-    "hash": "1257909654",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1644001445933.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "12,29",
+        "cursorPosition": "14,0",
         "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1644002577,
+    "lastKnownWriteTime": 1644003446,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1644002577176,
+    "last_content_update": 1644003446209,
     "read_only": false,
     "read_only_alternatives": []
 }
