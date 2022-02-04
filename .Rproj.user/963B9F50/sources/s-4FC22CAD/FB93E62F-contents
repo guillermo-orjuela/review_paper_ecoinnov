@@ -8,7 +8,9 @@ output:
     toc: TRUE
     toc_depth: 2
     number_sections: true
-site: distill::distill_website
+    css: styles.css
+    includes:
+      after_body: footer.html
 ---
 
 ```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
@@ -23,7 +25,7 @@ folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_
 load(paste(folder, "/3_Co-citation_fa-analysis/Results_FA_eco-innov_201221.rda", sep=""))
 ```
 
-This is the supplementary material of the review paper.
+1
 
 # Co-citation and Factor Analysis
 

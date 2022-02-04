@@ -1,7 +1,5 @@
 ---
 title: "Review Paper Eco-innovation: version 25-01-2022"
-description: |
-  Welcome to the website. I hope you enjoy it!
 output:
   html_document:
     theme: flatly
@@ -11,8 +9,8 @@ output:
     css: styles.css
     includes:
       after_body: footer.html
+site: distill::distill_website
 ---
-
 ```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
 suppressMessages(library(tidyverse))
 suppressMessages(library(dplyr))
@@ -25,7 +23,7 @@ folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_
 load(paste(folder, "/3_Co-citation_fa-analysis/Results_FA_eco-innov_201221.rda", sep=""))
 ```
 
-1
+This is the supplementary material of the review paper.
 
 # Co-citation and Factor Analysis
 
@@ -292,19 +290,19 @@ f62 %>%
 
 The 19 topics were clustered using a similarity measure to calculate the distance between topics and the results are presented in a two-dimensional graph using multidimensional scaling.
 
-```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
+```{r, echo=F, warning=F, message=F, eval=F, results='hide'}
 folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_review"
 # Load results
 load(paste(folder, "/5_Topic_model_eco-innov/results_LDA_eco-innov_061221.rda", sep=""))
 ```
 
-```{r, echo=F, warning=F, message=F, eval=T}
+```{r, echo=F, warning=F, message=F, eval=F}
 stm::toLDAvis(h3,
               docs=e4$documents,
               R = 10,
               plot.opts = list(xlab = "", ylab = ""),
               lambda.step = 1,
-              out.dir = "G:/Mi unidad/Web_pages/review_paper_ecoinnov/topic_modeling_files",
+              out.dir = "G:/Mi unidad/Web_pages/review_paper_ecoinnov/review_paper_ecoinnov/topic_modeling_files",
               open.browser = F,
               as.gist = FALSE,
               reorder.topics = T
@@ -354,4 +352,3 @@ cw %>%
                 full_width=F, position="left") %>% 
   collapse_rows(columns = 1:2, valign = "top")
 ```
-
