@@ -1,1 +1,1 @@
-# review_paper_ecoinnov
+# Supplementary material of the review paper on eco-innovation
