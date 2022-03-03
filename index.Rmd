@@ -326,12 +326,6 @@ data <- visNetwork::toVisNetworkData(net2)
 # Aquí se puede dar nombre a los nodos
 nodes0 <- data[[1]]
 edges <- data[[2]]
-
-# Base de datos con la media de theta por tópico
-topic <- data.frame(topicnames = paste0("Topic ", 1:19), 
-                    TopicNumber = 1:19, 
-                    TopicProportions = colMeans(h3$theta))
-
 ```
 
 ```{r, echo=F, warning=F, message=F, eval=T}
@@ -348,7 +342,7 @@ clp <- igraph::cluster_edge_betweenness(net2, weights = NULL,
                          membership = TRUE
 )
 nodes0$community <- clp$membership
-
+nodes0$community
 ## Definir colores para cluster y nodos
 # Método 2: aleatoriamente
 # qual_col_pals = RColorBrewer::brewer.pal.info[RColorBrewer::brewer.pal.info$category ==
@@ -375,8 +369,8 @@ TopicProportions = colMeans(h3$theta)
 # visNetwork preferences
 nodes$shape <- "dot"
 nodes$shadow <- TRUE  # Nodes will drop shadow
-nodes$title <- topic$topicnames  # Text on click
-nodes$label <- topic$topicnames  # Node label
+nodes$title <- paste0("Topic ", 1:21)  # Text on click
+nodes$label <- paste0("Topic ", 1:21)  # Node label
 nodes$size <- (TopicProportions/max(TopicProportions)) * 40  # Node size
 nodes$borderWidth <- 0  # Node border width
 nodes$group <- nodes0$community
@@ -396,7 +390,8 @@ visNetwork(nodes,
   visGroups(groupname = "2", color = "#d8b365") %>% 
   visGroups(groupname = "3", color = "#f6e8c3") %>% 
   visGroups(groupname = "4", color = "#5ab4ac") %>% 
-  visGroups(groupname = "5", color = "#01665e") %>% 
+  #visGroups(groupname = "5", color = "#01665e") %>% 
+  visNodes(font = list(size = 20)) %>% 
   visLayout(randomSeed = 33)
 
 
