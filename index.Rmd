@@ -288,7 +288,7 @@ f62 %>%
 
 ## Interactive Topic Model Visualization
 
-The 19 topics were clustered using a similarity measure to calculate the distance between topics and the results are presented in a two-dimensional graph using multidimensional scaling.
+The 21 topics were clustered in four groups.
 
 ```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
 folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_review"
@@ -370,10 +370,30 @@ TopicProportions = colMeans(h3$theta)
 nodes$shape <- "dot"
 nodes$shadow <- TRUE  # Nodes will drop shadow
 nodes$title <- paste0("Topic ", 1:21)  # Text on click
-nodes$label <- paste0("Topic ", 1:21)  # Node label
 nodes$size <- (TopicProportions/max(TopicProportions)) * 40  # Node size
 nodes$borderWidth <- 0  # Node border width
 nodes$group <- nodes0$community
+nodes$label <- c("green innov at\nregional scale",
+                 "firms' capabilities",
+                 "porter hypothesis",
+                 "environmental footprint",
+                 "small-medium\norganizations",
+                 "corporate social\nresponsibility",
+                 "supply-chain\nmanagement",
+                 "regulatory push-pull",
+                 "resource efficiency",
+                 "profiting",
+                 "circular eco-innovation",
+                 "process eco-innovation",
+                 "intermediary\norganizations",
+                 "cleaner goods",
+                 "customers",
+                 "networking",
+                 "cleaner energy",
+                 "competitive advantage",
+                 "sustainable and\nsustainability",
+                 "eco-innovation for\ndevelopment",
+                 "attitudes and behaviors")  # Node label
 
 # nodes$color.background <- col
 nodes$color.border <- "gray20"
@@ -392,14 +412,9 @@ visNetwork(nodes,
   visGroups(groupname = "4", color = "#5ab4ac") %>% 
   #visGroups(groupname = "5", color = "#01665e") %>% 
   visNodes(font = list(size = 20)) %>% 
+  visOptions(highlightNearest = T,
+             nodesIdSelection = T) %>% 
   visLayout(randomSeed = 33)
-
-
-  # visExport(type = "png", name = "export-network",
-  #           float = "left", label = "Save network",
-  #           background = "transparent", style= "")
-
-# visConfigure(enabled = TRUE)
 ```
 
 ## High Probabilities and FREX Words Related to Each Topic
