@@ -333,14 +333,23 @@ edges <- data[[2]]
 # linear time algorithm for detecting community structure in networks
 # clp <- igraph::cluster_label_prop(net2)
 # clp <- igraph::cluster_louvain(net2, weights = NULL)
-clp <- igraph::cluster_edge_betweenness(net2, weights = NULL,
-                         directed = F,
-                         edge.betweenness = T,
-                         merges = TRUE,
-                         bridges = TRUE,
-                         modularity = TRUE,
-                         membership = TRUE
+# clp <- igraph::cluster_edge_betweenness(net2, weights = NULL,
+#                          directed = F,
+#                          edge.betweenness = T,
+#                          merges = TRUE,
+#                          bridges = TRUE,
+#                          modularity = TRUE,
+#                          membership = TRUE
+# )
+
+clp <- cluster_walktrap(net2,
+                        weights = NULL,
+                        steps = 10,
+                        merges = TRUE,
+                        modularity = TRUE,
+                        membership = TRUE
 )
+
 nodes0$community <- clp$membership
 nodes0$community
 ## Definir colores para cluster y nodos
@@ -374,26 +383,26 @@ nodes$size <- (TopicProportions/max(TopicProportions)) * 40  # Node size
 nodes$borderWidth <- 0  # Node border width
 nodes$group <- nodes0$community
 nodes$label <- c("green innov at\nregional scale",
-                 "firms' capabilities",
-                 "porter hypothesis",
-                 "environmental footprint",
+                 "firms'\ncapabilities",
+                 "porter\nhypothesis",
+                 "environmental\nfootprint",
                  "small-medium\norganizations",
                  "corporate social\nresponsibility",
                  "supply-chain\nmanagement",
-                 "regulatory push-pull",
-                 "resource efficiency",
+                 "regulatory\npush-pull",
+                 "resource\nefficiency",
                  "profiting",
-                 "circular eco-innovation",
-                 "process eco-innovation",
+                 "circular\neco-innovation",
+                 "process\neco-innovation",
                  "intermediary\norganizations",
-                 "cleaner goods",
+                 "cleaner\ngoods",
                  "customers",
                  "networking",
-                 "cleaner energy",
-                 "competitive advantage",
+                 "cleaner\nenergy",
+                 "competitive\nadvantage",
                  "sustainable and\nsustainability",
                  "eco-innovation for\ndevelopment",
-                 "attitudes and behaviors")  # Node label
+                 "attitudes\nand behaviors")  # Node label
 
 # nodes$color.background <- col
 nodes$color.border <- "gray20"
@@ -403,7 +412,7 @@ nodes$id <- 1:nrow(nodes)
 
 visNetwork(nodes, 
            links,
-           width = "100%",
+           width = "90%",
            height = "600px",
            main = "Topic Correlations") %>% 
   visGroups(groupname = "1", color = "#8c510a") %>% 
@@ -411,10 +420,13 @@ visNetwork(nodes,
   visGroups(groupname = "3", color = "#f6e8c3") %>% 
   visGroups(groupname = "4", color = "#5ab4ac") %>% 
   #visGroups(groupname = "5", color = "#01665e") %>% 
-  visNodes(font = list(size = 20)) %>% 
+  visNodes(font = list(size = 18)) %>% 
   visOptions(highlightNearest = T,
              nodesIdSelection = T) %>% 
-  visLayout(randomSeed = 33)
+  visLayout(randomSeed = 15) %>% 
+  # visHierarchicalLayout() %>% 
+  visPhysics(stabilization = TRUE,
+             repulsion = list(centralGravity = 0.5))
 ```
 
 ## High Probabilities and FREX Words Related to Each Topic
