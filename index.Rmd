@@ -288,7 +288,7 @@ f62 %>%
 
 ## Interactive Topic Model Visualization
 
-The 21 topics were clustered in four groups.
+The below network illustrates the 21 topics that represents the eco-innovation literature.
 
 ```{r, echo=F, warning=F, message=F, eval=T, results='hide'}
 folder <- "C:/Users/User/OneDrive - PUJ Cali/PhD/6. P4_Eco-innov_review/2. Data_review"
@@ -362,28 +362,28 @@ nodes$title <- paste0("Topic ", 1:21)  # Text on click
 nodes$size <- (TopicProportions/max(TopicProportions)) * 40  # Node size
 nodes$borderWidth <- 0  # Node border width
 # nodes$group <- nodes0$community
-nodes$label <- paste0("Topic ", 1:21)
-# nodes$label <- c("green innov at\nregional scale",
-#                  "firms'\ncapabilities",
-#                  "porter\nhypothesis",
-#                  "environmental\nfootprint",
-#                  "small-medium\norganizations",
-#                  "corporate social\nresponsibility",
-#                  "supply-chain\nmanagement",
-#                  "regulatory\npush-pull",
-#                  "resource\nefficiency",
-#                  "profiting",
-#                  "circular\neco-innovation",
-#                  "process\neco-innovation",
-#                  "intermediary\norganizations",
-#                  "cleaner\ngoods",
-#                  "customers",
-#                  "networking",
-#                  "cleaner\nenergy",
-#                  "competitive\nadvantage",
-#                  "sustainable and\nsustainability",
-#                  "eco-innovation for\ndevelopment",
-#                  "attitudes\nand behaviors")  # Node label
+# nodes$label <- paste0("Topic ", 1:21) \n
+nodes$label <- c("competitive advantage",
+                 "eco-innovation types",
+                 "environmental regulation",
+                 "green innovation\ngeography",
+                 "cleaner energy",
+                 "supply-chain\nmanagement",
+                 "decoupling emissions\nfrom growth",
+                 "stakeholders\nand institutions",
+                 "small-medium firms",
+                 "government support",
+                 "corporate social\nresponsibility",
+                 "environmental\ninnovation networks",
+                 "demand-pull\nand technology-push",
+                 "attitudes\nand behaviors",
+                 "cleaner goods",
+                 "absorptive capacity",
+                 "end-of-pipe",
+                 "collaboration",
+                 "culture",
+                 "life cycle",
+                 "synergies")  # Node label
 
 nodes$color.background <- "#5ab4ac"
 nodes$color.border <- "gray20"
@@ -404,8 +404,8 @@ visNetwork(nodes,
              nodesIdSelection = T) %>% 
   visLayout(randomSeed = 18) %>% 
   visPhysics(stabilization = T,
-             barnesHut = list(springLength = 130,
-                              avoidOverlap = 0.6))
+             barnesHut = list(springLength = 200,
+                              avoidOverlap = 0.5))
 ```
 
 ## High Probabilities and FREX Words Related to Each Topic
